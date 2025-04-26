@@ -1,37 +1,706 @@
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Dead Cells</title>
-    <link href="styles.css" rel="stylesheet" />
-  </head>
-  <body>
-    <article class="content">
-      <h1>Dead cells</h1>
-      <p>
-        the music at the top is the soundtrack of the first level of dead
-        cells(or in other words the prisoners quarters)Do you like
-        <em>action</em> and <em>fighting</em> games?if you do then I think you
-        will love dead cells...and me, dead cells is personally my favoright
-        game of all time.and if you are the same than, great!(dead cells is not
-        a multiplayergame just to let you know and when you die you start out at
-        the begining of the prisoner quarters)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculator</title>
+  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #333;
+      background-color: #f5f5f5;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .title {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    /* Calculator Styles */
+    .calculator-container {
+      display: flex;
+      justify-content: center;
+    }
+    .calculator {
+      width: 100%;
+      max-width: 320px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      transition: background-color 0.3s;
+    }
+    .calculator-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    .calculator-title {
+      font-weight: 600;
+    }
+    .calculator-loader {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(0, 0, 0, 0.1);
+      border-top-color: #3498db;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .calculator-content {
+      padding: 1rem;
+    }
+    .display {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      text-align: right;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #fff;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+    .btn {
+      padding: 0.75rem;
+      border: none;
+      border-radius: 4px;
+      background-color: #f8f9fa;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.3s;
+    }
+    .btn:hover {
+      background-color: #e9ecef;
+    }
+    .btn-outline {
+      border: 1px solid #ddd;
+      transition: border-color 0.3s;
+    }
+    .btn-secondary {
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
+    .btn-span-2 {
+      grid-column: span 2;
+    }
+    /* Theme controls */
+    .theme-controls {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      z-index: 100;
+    }
+    .theme-toggle {
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .theme-selector {
+      position: relative;
+    }
+    .theme-button {
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .theme-dropdown {
+      position: absolute;
+      top: 45px;
+      left: 0;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+      padding: 0.5rem;
+      width: 150px;
+      display: none;
+      z-index: 10;
+    }
+    .theme-dropdown.show {
+      display: block;
+    }
+    .theme-option {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    .theme-option:hover {
+      background-color: #f8f9fa;
+    }
+    .color-preview {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      border: 1px solid #ddd;
+    }
+    /* Dark theme - default */
+    .dark {
+      background-color: #222;
+      color: #f8f9fa;
+    }
+    .dark .calculator {
+      background-color: #333;
+    }
+    .dark .calculator-header {
+      background-color: #444;
+      border-bottom-color: #555;
+    }
+    .dark .display {
+      background-color: #444;
+      color: white;
+      border-color: #555;
+    }
+    .dark .btn {
+      background-color: #444;
+      color: white;
+    }
+    .dark .btn:hover {
+      background-color: #555;
+    }
+    .dark .btn-outline {
+      border-color: #555;
+    }
+    .dark .btn-secondary {
+      background-color: #555;
+    }
+    .dark .subtitle {
+      color: #aaa;
+    }
+    .dark .theme-dropdown {
+      background-color: #333;
+      color: #f8f9fa;
+    }
+    .dark .theme-option:hover {
+      background-color: #444;
+    }
+    /* Blue theme */
+    .blue-theme {
+      background-color: #e6f2ff;
+      color: #333;
+    }
+    .blue-theme .calculator {
+      background-color: #fff;
+    }
+    .blue-theme .calculator-header {
+      background-color: #cce5ff;
+      border-bottom-color: #b8daff;
+    }
+    .blue-theme .btn-secondary {
+      background-color: #007bff;
+      color: white;
+    }
+    .blue-theme .btn-outline {
+      border-color: #b8daff;
+    }
+    /* Dark Blue theme */
+    .dark.blue-theme {
+      background-color: #0d1b2a;
+      color: #f8f9fa;
+    }
+    .dark.blue-theme .calculator {
+      background-color: #1b263b;
+    }
+    .dark.blue-theme .calculator-header {
+      background-color: #2a324b;
+      border-bottom-color: #3b455b;
+    }
+    .dark.blue-theme .display {
+      background-color: #2a324b;
+      color: white;
+      border-color: #3b455b;
+    }
+    .dark.blue-theme .btn {
+      background-color: #2a324b;
+      color: white;
+    }
+    .dark.blue-theme .btn:hover {
+      background-color: #3b455b;
+    }
+    .dark.blue-theme .btn-secondary {
+      background-color: #0d6efd;
+      color: white;
+    }
+    /* Green theme */
+    .green-theme {
+      background-color: #e8f5e9;
+      color: #333;
+    }
+    .green-theme .calculator {
+      background-color: #fff;
+    }
+    .green-theme .calculator-header {
+      background-color: #c8e6c9;
+      border-bottom-color: #a5d6a7;
+    }
+    .green-theme .btn-secondary {
+      background-color: #4caf50;
+      color: white;
+    }
+    .green-theme .btn-outline {
+      border-color: #a5d6a7;
+    }
+    /* Dark Green theme */
+    .dark.green-theme {
+      background-color: #1b2a1b;
+      color: #f8f9fa;
+    }
+    .dark.green-theme .calculator {
+      background-color: #2a3b2a;
+      color: #f8f9fa;
+    }
+    .dark.green-theme .calculator-header {
+      background-color: #384a38;
+      border-bottom-color: #455b45;
+    }
+    .dark.green-theme .display {
+      background-color: #384a38;
+      color: white;
+      border-color: #455b45;
+    }
+    .dark.green-theme .btn {
+      background-color: #384a38;
+      color: white;
+    }
+    .dark.green-theme .btn:hover {
+      background-color: #455b45;
+    }
+    .dark.green-theme .btn-secondary {
+      background-color: #2e7d32;
+      color: white;
+    }
+    /* Purple theme */
+    .purple-theme {
+      background-color: #f3e5f5;
+      color: #333;
+    }
+    .purple-theme .calculator {
+      background-color: #fff;
+    }
+    .purple-theme .calculator-header {
+      background-color: #e1bee7;
+      border-bottom-color: #ce93d8;
+    }
+    .purple-theme .btn-secondary {
+      background-color: #9c27b0;
+      color: white;
+    }
+    .purple-theme .btn-outline {
+      border-color: #ce93d8;
+    }
+    /* Dark Purple theme */
+    .dark.purple-theme {
+      background-color: #2a1b2a;
+      color: #f8f9fa;
+    }
+    .dark.purple-theme .calculator {
+      background-color: #3b2a3b;
+    }
+    .dark.purple-theme .calculator-header {
+      background-color: #4a384a;
+      border-bottom-color: #5b455b;
+    }
+    .dark.purple-theme .display {
+      background-color: #4a384a;
+      color: white;
+      border-color: #5b455b;
+    }
+    .dark.purple-theme .btn {
+      background-color: #4a384a;
+      color: white;
+    }
+    .dark.purple-theme .btn:hover {
+      background-color: #5b455b;
+    }
+    .dark.purple-theme .btn-secondary {
+      background-color: #7b1fa2;
+      color: white;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-controls">
+    <button id="theme-toggle" class="theme-toggle">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
+    <div class="theme-selector">
+      <button id="theme-button" class="theme-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 8v8"></path>
+          <path d="M8 12h8"></path>
+        </svg>
+      </button>
+      <div id="theme-dropdown" class="theme-dropdown">
+        <div class="theme-option" data-theme="default">
+          <div class="color-preview" style="background-color: #f5f5f5;"></div>
+          <span>Default</span>
+        </div>
+        <div class="theme-option" data-theme="blue-theme">
+          <div class="color-preview" style="background-color: #007bff;"></div>
+          <span>Blue</span>
+        </div>
+        <div class="theme-option" data-theme="green-theme">
+          <div class="color-preview" style="background-color: #4caf50;"></div>
+          <span>Green</span>
+        </div>
+        <div class="theme-option" data-theme="purple-theme">
+          <div class="color-preview" style="background-color: #9c27b0;"></div>
+          <span>Purple</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">Basic Calculator</h1>
+      <p class="subtitle">
+        Perform quick calculations with this easy-to-use calculator.
       </p>
-      <h2>if you want more info go to:</h2>
-      <ul>
-        <li>
-          <a href="https://deadcells.gamepedia.com/">Dead cells wiki</a>
-          on google
-        </li>
-        <li>
-          <a href="playing.html">Check out how to play dead cells!</a>
-        </li>
-        <li>
-          <a href="terraria.html">And check out my Terraria page!</a>
-        </li>
-        <li>
-          <a href="halo.html">And check out my Halo page!</a>
-        </li>
-      </ul>
-    </article>
-  </body>
+    </header>
+    <div class="calculator-container">
+      <div class="calculator">
+        <div class="calculator-header">
+          <span class="calculator-title">Calculator</span>
+          <div id="loader" class="calculator-loader"></div>
+        </div>
+        <div class="calculator-content">
+          <input type="text" id="display" class="display" readonly value="0">
+          <div class="buttons">
+            <!-- Memory operations -->
+            <button class="btn btn-outline" onclick="handleMemoryClear()">MC</button>
+            <button class="btn btn-outline" onclick="handleMemoryRecall()">MR</button>
+            <button class="btn btn-outline" onclick="handleMemoryAdd()">M+</button>
+            <button class="btn btn-outline" onclick="handleMemorySubtract()">M-</button>
+            
+            <!-- Clear, sign, percent, divide -->
+            <button class="btn btn-outline" onclick="clearAll()">C</button>
+            <button class="btn btn-outline" onclick="toggleSign()">+/-</button>
+            <button class="btn btn-outline" onclick="inputPercent()">%</button>
+            <button class="btn btn-secondary" onclick="performOperation('÷')">÷</button>
+            
+            <!-- Digits 7-9 and multiply -->
+            <button class="btn" onclick="inputDigit('7')">7</button>
+            <button class="btn" onclick="inputDigit('8')">8</button>
+            <button class="btn" onclick="inputDigit('9')">9</button>
+            <button class="btn btn-secondary" onclick="performOperation('×')">×</button>
+            
+            <!-- Digits 4-6 and subtract -->
+            <button class="btn" onclick="inputDigit('4')">4</button>
+            <button class="btn" onclick="inputDigit('5')">5</button>
+            <button class="btn" onclick="inputDigit('6')">6</button>
+            <button class="btn btn-secondary" onclick="performOperation('-')">-</button>
+            
+            <!-- Digits 1-3 and add -->
+            <button class="btn" onclick="inputDigit('1')">1</button>
+            <button class="btn" onclick="inputDigit('2')">2</button>
+            <button class="btn" onclick="inputDigit('3')">3</button>
+            <button class="btn btn-secondary" onclick="performOperation('+')">+</button>
+            
+            <!-- Zero, decimal, equals -->
+            <button class="btn btn-span-2" onclick="inputDigit('0')">0</button>
+            <button class="btn" onclick="inputDecimal()">.</button>
+            <button class="btn btn-secondary" onclick="performOperation('=')">=</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Calculator state
+    let display = "0";
+    let previousValue = null;
+    let operator = null;
+    let waitingForOperand = false;
+    let memory = 0;
+    
+    // DOM elements
+    const displayElement = document.getElementById('display');
+    const loader = document.getElementById('loader');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeButton = document.getElementById('theme-button');
+    const themeDropdown = document.getElementById('theme-dropdown');
+    const themeOptions = document.querySelectorAll('.theme-option');
+    
+    // Theme toggle functionality
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      
+      // Change icon based on theme
+      if (document.body.classList.contains('dark')) {
+        themeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      } else {
+        themeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+      }
+      
+      // Store theme preference
+      localStorage.setItem('darkMode', document.body.classList.contains('dark') ? 'dark' : 'light');
+    });
+    
+    // Theme dropdown functionality
+    themeButton.addEventListener('click', () => {
+      themeDropdown.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+      if (!themeButton.contains(event.target) && !themeDropdown.contains(event.target)) {
+        themeDropdown.classList.remove('show');
+      }
+    });
+    
+    // Theme selection
+    themeOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        const theme = option.getAttribute('data-theme');
+        
+        // Remove all theme classes first
+        document.body.classList.remove('blue-theme', 'green-theme', 'purple-theme');
+        
+        // Add the selected theme class if it's not default
+        if (theme !== 'default') {
+          document.body.classList.add(theme);
+        }
+        
+        // Close dropdown
+        themeDropdown.classList.remove('show');
+        
+        // Save theme preference
+        localStorage.setItem('colorTheme', theme);
+      });
+    });
+    
+    // Initialize themes from localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedDarkMode = localStorage.getItem('darkMode');
+      const savedColorTheme = localStorage.getItem('colorTheme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      // Set dark/light mode
+      if (savedDarkMode === 'dark' || (!savedDarkMode && prefersDark)) {
+        document.body.classList.add('dark');
+        themeToggle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+      }
+      
+      // Set color theme
+      if (savedColorTheme && savedColorTheme !== 'default') {
+        document.body.classList.add(savedColorTheme);
+      }
+    });
+    
+    // Calculator functions
+    function updateDisplay() {
+      displayElement.value = display;
+    }
+    
+    function inputDigit(digit) {
+      if (waitingForOperand) {
+        display = digit;
+        waitingForOperand = false;
+      } else {
+        display = display === "0" ? digit : display + digit;
+      }
+      updateDisplay();
+    }
+    
+    function inputDecimal() {
+      if (waitingForOperand) {
+        display = "0.";
+        waitingForOperand = false;
+      } else if (display.indexOf(".") === -1) {
+        display += ".";
+      }
+      updateDisplay();
+    }
+    
+    function clearDisplay() {
+      display = "0";
+      waitingForOperand = false;
+      updateDisplay();
+    }
+    
+    function clearAll() {
+      display = "0";
+      previousValue = null;
+      operator = null;
+      waitingForOperand = false;
+      updateDisplay();
+    }
+    
+    function toggleSign() {
+      const newValue = parseFloat(display) * -1;
+      display = String(newValue);
+      updateDisplay();
+    }
+    
+    function inputPercent() {
+      const currentValue = parseFloat(display);
+      const percentValue = currentValue / 100;
+      display = String(percentValue);
+      updateDisplay();
+    }
+    
+    function performOperation(nextOperator) {
+      const inputValue = parseFloat(display);
+      
+      if (previousValue === null) {
+        previousValue = display;
+      } else if (operator) {
+        const currentValue = parseFloat(previousValue);
+        let newValue;
+        
+        // Show animation
+        loader.style.display = 'block';
+        
+        switch (operator) {
+          case "+":
+            newValue = currentValue + inputValue;
+            break;
+          case "-":
+            newValue = currentValue - inputValue;
+            break;
+          case "×":
+            newValue = currentValue * inputValue;
+            break;
+          case "÷":
+            newValue = currentValue / inputValue;
+            break;
+          default:
+            newValue = inputValue;
+        }
+        
+        previousValue = String(newValue);
+        display = String(newValue);
+        
+        // Hide animation after short delay
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 300);
+      }
+      
+      waitingForOperand = true;
+      operator = nextOperator === "=" ? null : nextOperator;
+      updateDisplay();
+    }
+    
+    // Memory functions
+    function handleMemoryClear() {
+      memory = 0;
+    }
+    
+    function handleMemoryRecall() {
+      display = String(memory);
+      waitingForOperand = false;
+      updateDisplay();
+    }
+    
+    function handleMemoryAdd() {
+      memory += parseFloat(display);
+    }
+    
+    function handleMemorySubtract() {
+      memory -= parseFloat(display);
+    }
+    
+    // Keyboard input handling
+    document.addEventListener('keydown', (event) => {
+      const key = event.key;
+      // Handle numeric keys and decimal
+      if (/^\d$/.test(key)) {
+        inputDigit(key);
+      } else if (key === '.') {
+        inputDecimal();
+      }
+      // Handle operators
+      else if (key === '+') {
+        performOperation('+');
+      } else if (key === '-') {
+        performOperation('-');
+      } else if (key === '*') {
+        performOperation('×');
+      } else if (key === '/') {
+        performOperation('÷');
+      } else if (key === 'Enter' || key === '=') {
+        performOperation('=');
+      }
+      // Handle clear
+      else if (key === 'Escape') {
+        clearAll();
+      }
+      // Handle backspace
+      else if (key === 'Backspace') {
+        if (display.length > 1) {
+          display = display.slice(0, -1);
+        } else {
+          display = '0';
+        }
+        updateDisplay();
+      }
+    });
+    
+    // Initialize the display
+    updateDisplay();
+  </script>
+</body>
 </html>
