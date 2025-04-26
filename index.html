@@ -11,6 +11,15 @@
       padding: 0;
       box-sizing: border-box;
     }
+    :root {
+      /* Progress bar color variables */
+      --progress-excellent: #10b981; /* Green */
+      --progress-good: #34d399; /* Light green */
+      --progress-okay: #fbbf24; /* Yellow */
+      --progress-poor: #f97316; /* Orange */
+      --progress-bad: #ef4444; /* Red */
+    }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.5;
@@ -422,34 +431,19 @@
     }
     /* Results sections */
     .results-heading {
-      color: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-lightness-base) * 0.8));
-    }
-    .dark .results-heading {
-      color: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-lightness-base) * 1.1));
+      color: hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base));
     }
     .value-highlight {
       color: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-lightness-base) * 0.9));
       font-weight: bold;
     }
     .dark .value-highlight {
-      color: hsl(var(--theme-hue), var(--theme-saturation), calc(var(--theme-lightness-base) * 1.2));
+      color: hsl(var(--theme-hue), calc(var(--theme-saturation) * 0.8), calc(var(--theme-lightness-base) * 1.2));
     }
-    /* Input fields focus */
-    input:focus, 
-    select:focus,
-    textarea:focus {
-      border-color: hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base));
-      box-shadow: 0 0 0 1px hsla(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base), 0.5);
-    }
-    /* Chart Colors */
-    .chart-balance {
+    /* Chart colors */
+    .chart-principal {
       background-color: hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base));
     }
-    
-    .chart-contributions {
-      background-color: hsl(var(--theme-hue), calc(var(--theme-saturation) * 0.7), calc(var(--theme-lightness-base) * 1.1));
-    }
-    
     .chart-interest {
       background-color: hsl(var(--theme-hue), calc(var(--theme-saturation) * 1.2), calc(var(--theme-lightness-base) * 0.8));
     }
@@ -457,6 +451,9 @@
     .dark {
       background-color: #121212;
       color: #e0e0e0;
+    }
+    .dark .bg-gray-200 {
+      background-color: #333 !important;
     }
     .dark .card {
       background-color: #1e1e1e;
@@ -645,6 +642,50 @@
     .rounded-lg {
       border-radius: 0.5rem;
     }
+    /* Typing indicator for chat */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+    }
+    .typing-indicator .dot {
+      display: inline-block;
+      animation: typing-dot 1.4s infinite;
+      opacity: 0.7;
+    }
+    .typing-indicator .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .typing-indicator .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes typing-dot {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+    .flex {
+      display: flex;
+    }
+    .justify-between {
+      justify-content: space-between;
+    }
+    .font-medium {
+      font-weight: 500;
+    }
+    .rounded-full {
+      border-radius: 9999px;
+    }
+    .h-4 {
+      height: 1rem;
+    }
+    .bg-gray-200 {
+      background-color: #e5e7eb;
+    }
+    .dark .bg-gray-700 {
+      background-color: #374151;
+    }
+    .text-sm {
+      font-size: 0.875rem;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 </head>
@@ -779,60 +820,52 @@
               </div>
               <div class="form-group">
                 <label for="weekly-contribution" class="form-label">Weekly Contribution ($)</label>
-                <input type="number" id="weekly-contribution" class="form-input" min="0" value="200">
+                <input type="number" id="weekly-contribution" class="form-input" min="0" value="100">
               </div>
               <div class="form-group">
-                <label for="interest-rate" class="form-label">Annual Interest Rate (%)</label>
-                <input type="number" id="interest-rate" class="form-input" min="0" step="0.1" value="5">
+                <label for="annual-interest-rate" class="form-label">Annual Interest Rate (%)</label>
+                <input type="number" id="annual-interest-rate" class="form-input" min="0" step="0.1" value="5">
               </div>
               <div class="form-group">
-                <label for="goal-amount" class="form-label">Goal Amount ($)</label>
-                <input type="number" id="goal-amount" class="form-input" min="0" value="100000">
+                <label for="investment-period" class="form-label">Investment Period (years)</label>
+                <input type="number" id="investment-period" class="form-input" min="1" max="50" value="10">
               </div>
+              <button type="button" class="btn btn-primary w-full" onclick="calculateInterest()">Calculate</button>
             </form>
           </div>
         </div>
-        <div>
-          <div class="card results-card">
-            <div class="card-body">
-              <h3 class="text-xl font-semibold mb-4 results-heading">Your Results</h3>
+        <div class="card results-card">
+          <div class="card-body">
+            <h3 class="text-xl font-semibold mb-4 results-heading">Results</h3>
+            <div id="results-container">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="results-card p-4 rounded-lg">
-                  <p class="result-label">Time to Reach Goal</p>
-                  <p id="time-to-goal" class="result-value value-highlight">6.1 years</p>
+                <div class="result-card">
+                  <div class="result-value" id="final-balance">$0</div>
+                  <div class="result-label">Final Balance</div>
                 </div>
-                <div class="results-card p-4 rounded-lg">
-                  <p class="result-label">Total Contributions</p>
-                  <p id="total-contributions" class="result-value value-highlight">$65,200</p>
+                <div class="result-card">
+                  <div class="result-value" id="total-contributions">$0</div>
+                  <div class="result-label">Total Contributions</div>
                 </div>
-                <div class="results-card p-4 rounded-lg">
-                  <p class="result-label">Interest Earned</p>
-                  <p id="interest-earned" class="result-value value-highlight">$25,614</p>
+                <div class="result-card">
+                  <div class="result-value" id="total-interest">$0</div>
+                  <div class="result-label">Total Interest Earned</div>
                 </div>
-                <div class="results-card p-4 rounded-lg">
-                  <p class="result-label">Final Balance</p>
-                  <p id="final-balance" class="result-value value-highlight">$100,814</p>
+                <div class="result-card">
+                  <div class="result-value" id="interest-percent">0%</div>
+                  <div class="result-label">Interest as % of Final Balance</div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div class="card results-card">
-            <div class="card-body">
-              <h3 class="text-xl font-semibold mb-4 results-heading">Growth Visualization</h3>
               <div class="chart-container">
                 <canvas id="growth-chart"></canvas>
               </div>
               <div class="chart-legend">
                 <div class="legend-item">
-                  <span class="legend-color" style="background-color: hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base));"></span>
-                  <span>Balance</span>
+                  <div class="legend-color chart-principal"></div>
+                  <span>Principal</span>
                 </div>
                 <div class="legend-item">
-                  <span class="legend-color" style="background-color: hsl(var(--theme-hue), calc(var(--theme-saturation) * 0.7), calc(var(--theme-lightness-base) * 1.1));"></span>
-                  <span>Contributions</span>
-                </div>
-                <div class="legend-item">
-                  <span class="legend-color" style="background-color: hsl(var(--theme-hue), calc(var(--theme-saturation) * 1.2), calc(var(--theme-lightness-base) * 0.8));"></span>
+                  <div class="legend-color chart-interest"></div>
                   <span>Interest</span>
                 </div>
               </div>
@@ -848,13 +881,9 @@
         Get personalized financial advice from Tom, your AI financial assistant.
       </p>
       <div id="api-key-setup" class="api-key-setup">
-        <h3 class="text-xl font-semibold mb-2">OpenAI API Key Setup</h3>
-        <p class="mb-4">To chat with Tom, you'll need to provide your OpenAI API key.</p>
-        <div class="api-key-input">
-          <input type="password" id="api-key-input" class="form-input" placeholder="Enter your OpenAI API key">
-        </div>
-        <button id="submit-api-key" class="btn btn-primary">Submit Key</button>
-        <button id="skip-api-key" class="btn">Skip for Now</button>
+        <h3 class="text-xl font-semibold mb-2">Chat with Tom</h3>
+        <p class="mb-4">Tom is an AI financial assistant powered by OpenAI. He can provide advice on budgeting, investing, saving, debt management, and more.</p>
+        <button id="submit-api-key" class="btn btn-primary">Start Chatting</button>
       </div>
       <div id="chat-interface" style="display: none;">
         <div class="card results-card">
@@ -884,18 +913,18 @@
         <div class="card results-card">
           <div class="card-body">
             <h3 class="text-xl font-semibold mb-4 results-heading">Your Financial Information</h3>
-            <form id="financial-form">
+            <form id="financial-info-form">
               <div class="form-group">
                 <label for="monthly-income" class="form-label">Monthly Income ($)</label>
-                <input type="number" id="monthly-income" class="form-input" min="0" value="4000">
+                <input type="number" id="monthly-income" class="form-input" min="0" value="5000">
               </div>
               <div class="form-group">
                 <label for="monthly-expenses" class="form-label">Monthly Expenses ($)</label>
-                <input type="number" id="monthly-expenses" class="form-input" min="0" value="3000">
+                <input type="number" id="monthly-expenses" class="form-input" min="0" value="3500">
               </div>
               <div class="form-group">
                 <label for="total-savings" class="form-label">Total Savings ($)</label>
-                <input type="number" id="total-savings" class="form-input" min="0" value="10000">
+                <input type="number" id="total-savings" class="form-input" min="0" value="15000">
               </div>
               <div class="form-group">
                 <label for="total-debt" class="form-label">Total Debt ($)</label>
@@ -936,6 +965,7 @@
     const themeOptions = document.querySelectorAll('.theme-option');
     let isDarkMode = false;
     let currentTheme = 'default';
+    
     // Initialize theme from localStorage if available
     function initTheme() {
       const savedDarkMode = localStorage.getItem('darkMode') === 'true';
@@ -949,6 +979,7 @@
         applyTheme(savedTheme);
       }
     }
+    
     // Toggle dark mode
     function toggleDarkMode() {
       isDarkMode = !isDarkMode;
@@ -960,6 +991,7 @@
         ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>'
         : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
     }
+    
     // Apply selected theme
     function applyTheme(theme) {
       // Remove previous theme
@@ -978,6 +1010,7 @@
       // Update the chart colors
       updateChartColors();
     }
+    
     // Event listeners for theme controls
     themeToggle.addEventListener('click', toggleDarkMode);
     
@@ -999,6 +1032,7 @@
         themeDropdown.classList.remove('show');
       }
     });
+    
     // Navigation
     const navItems = document.querySelectorAll('.nav-item');
     const pages = document.querySelectorAll('.page');
@@ -1021,12 +1055,14 @@
         });
       });
     });
+    
     // Basic Calculator
     let display = document.getElementById('display');
     let previousValue = null;
     let operator = null;
     let waitingForOperand = false;
     let memory = 0;
+    
     function showCalculationAnimation() {
       const loader = document.getElementById('basic-calculator-loader');
       loader.style.display = 'block';
@@ -1034,6 +1070,7 @@
         loader.style.display = 'none';
       }, 300);
     }
+    
     function inputDigit(digit) {
       if (waitingForOperand) {
         display.value = digit;
@@ -1042,6 +1079,7 @@
         display.value = display.value === '0' ? digit : display.value + digit;
       }
     }
+    
     function inputDecimal() {
       if (waitingForOperand) {
         display.value = '0.';
@@ -1052,24 +1090,29 @@
         display.value += '.';
       }
     }
+    
     function clearDisplay() {
       display.value = '0';
       waitingForOperand = false;
     }
+    
     function clearAll() {
       display.value = '0';
       previousValue = null;
       operator = null;
       waitingForOperand = false;
     }
+    
     function toggleSign() {
       const value = parseFloat(display.value);
       display.value = (-value).toString();
     }
+    
     function inputPercent() {
       const value = parseFloat(display.value);
       display.value = (value / 100).toString();
     }
+    
     function performOperation(nextOperator) {
       const inputValue = parseFloat(display.value);
       if (previousValue === null) {
@@ -1101,19 +1144,24 @@
       waitingForOperand = true;
       operator = nextOperator;
     }
+    
     function handleMemoryClear() {
       memory = 0;
     }
+    
     function handleMemoryRecall() {
       display.value = memory.toString();
       waitingForOperand = false;
     }
+    
     function handleMemoryAdd() {
       memory += parseFloat(display.value);
     }
+    
     function handleMemorySubtract() {
       memory -= parseFloat(display.value);
     }
+    
     // Add keyboard support
     document.addEventListener('keydown', (event) => {
       if (document.getElementById('basic-calculator').classList.contains('active')) {
@@ -1152,14 +1200,10 @@
           performOperation('÷');
         } else if (key === 'Enter' || key === '=') {
           performOperation('=');
-        }
-        // Handle clear
-        else if (key === 'Escape') {
+        } else if (key === 'Escape') {
           clearAll();
-        }
-        // Handle backspace - remove last digit
-        else if (key === 'Backspace') {
-          if (display.value.length > 1) {
+        } else if (key === 'Backspace') {
+          if (display.value.length > 1 && !waitingForOperand) {
             display.value = display.value.slice(0, -1);
           } else {
             display.value = '0';
@@ -1167,146 +1211,50 @@
         }
       }
     });
+    
     // Interest Calculator
-    let growthChart = null;
-    // Format currency
+    let growthChart;
+    
+    // Helper function to format currency
     function formatCurrency(value) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
+      return value.toLocaleString('en-US', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
-      }).format(value);
+      });
     }
-    // Calculate results
-    function calculateInterest() {
-      const initialBalance = parseFloat(document.getElementById('initial-balance').value) || 0;
-      const weeklyContribution = parseFloat(document.getElementById('weekly-contribution').value) || 0;
-      const interestRate = parseFloat(document.getElementById('interest-rate').value) || 0;
-      const goalAmount = parseFloat(document.getElementById('goal-amount').value) || 0;
-      
-      // Validate inputs
-      if (initialBalance < 0 || weeklyContribution < 0 || interestRate < 0 || goalAmount <= 0) {
-        return;
-      }
-      
-      // Calculate
-      const annualInterestRate = interestRate / 100;
-      const weeklyInterestRate = annualInterestRate / 52;
-      
-      let balance = initialBalance;
-      let totalContributions = 0;
-      let totalInterest = 0;
-      let weeks = 0;
-      const maxWeeks = 100 * 52; // Max 100 years
-      
-      const growthData = {
-        labels: [],
-        balanceData: [],
-        contributionsData: [],
-        interestData: []
-      };
-      
-      // Track progress every year
-      const yearlySnapshots = [];
-      
-      while (balance < goalAmount && weeks < maxWeeks) {
-        // Add contribution
-        balance += weeklyContribution;
-        totalContributions += weeklyContribution;
-        
-        // Add interest
-        const interestEarned = balance * weeklyInterestRate;
-        balance += interestEarned;
-        totalInterest += interestEarned;
-        
-        weeks++;
-        
-        // Record yearly data for the chart
-        if (weeks % 52 === 0) {
-          const year = weeks / 52;
-          yearlySnapshots.push({
-            year,
-            balance,
-            totalContributions,
-            totalInterest
-          });
-          
-          growthData.labels.push(`Year ${year}`);
-          growthData.balanceData.push(balance);
-          growthData.contributionsData.push(totalContributions);
-          growthData.interestData.push(totalInterest);
-        }
-      }
-      
-      // Calculate results
-      const years = Math.floor(weeks / 52);
-      const remainingWeeks = weeks % 52;
-      
-      // Format and display results
-      document.getElementById('time-to-goal').textContent = years + (remainingWeeks > 0 ? '.' + Math.round(remainingWeeks / 52 * 10) : '') + ' years';
-      document.getElementById('total-contributions').textContent = formatCurrency(totalContributions);
-      document.getElementById('interest-earned').textContent = formatCurrency(totalInterest);
-      document.getElementById('final-balance').textContent = formatCurrency(balance);
-      
-      // Update chart
-      updateChart(growthData);
-    }
-    // Update chart
-    function updateChart(data) {
+    
+    // Initialize chart with empty data
+    function initChart() {
       const ctx = document.getElementById('growth-chart').getContext('2d');
+      
+      // Set chart colors based on theme
+      const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-primary');
+      const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-secondary');
       
       if (growthChart) {
         growthChart.destroy();
       }
       
-      // Generate colors based on theme variables
-      const darkMode = document.body.classList.contains('dark');
-      
-      // Create a line gradient for Balance line
-      const balanceLineColor = `hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base))`;
-      
-      // Create distinct shades for the chart elements
-      const contributionsColor = `hsl(var(--theme-hue), calc(var(--theme-saturation) * 0.7), calc(var(--theme-lightness-base) * 1.1))`;
-      const interestColor = `hsl(var(--theme-hue), calc(var(--theme-saturation) * 1.2), calc(var(--theme-lightness-base) * 0.8))`;
-      
       growthChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
-          labels: data.labels,
+          labels: [],
           datasets: [
             {
-              label: 'Balance',
-              data: data.balanceData,
-              backgroundColor: `hsla(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base), 0)`, // Transparent for line
-              borderColor: balanceLineColor,
-              borderWidth: 3,
-              type: 'line',
-              fill: false,
-              tension: 0.4,
-              yAxisID: 'y',
-              pointBackgroundColor: balanceLineColor,
-              pointBorderColor: balanceLineColor,
-              pointHoverBackgroundColor: balanceLineColor,
-              pointHoverBorderColor: '#fff',
-              pointRadius: 4,
-              pointHoverRadius: 6
-            },
-            {
-              label: 'Contributions',
-              data: data.contributionsData,
-              backgroundColor: `hsla(var(--theme-hue), calc(var(--theme-saturation) * 0.7), calc(var(--theme-lightness-base) * 1.1), 0.7)`,
-              borderColor: contributionsColor,
-              borderWidth: 1,
-              yAxisID: 'y'
+              label: 'Principal',
+              data: [],
+              borderColor: primaryColor,
+              backgroundColor: primaryColor,
+              borderWidth: 2,
+              fill: false
             },
             {
               label: 'Interest',
-              data: data.interestData,
-              backgroundColor: `hsla(var(--theme-hue), calc(var(--theme-saturation) * 1.2), calc(var(--theme-lightness-base) * 0.8), 0.7)`,
-              borderColor: interestColor,
-              borderWidth: 1,
-              yAxisID: 'y'
+              data: [],
+              borderColor: secondaryColor,
+              backgroundColor: secondaryColor,
+              borderWidth: 2,
+              fill: false
             }
           ]
         },
@@ -1314,11 +1262,31 @@
           responsive: true,
           maintainAspectRatio: false,
           scales: {
+            x: {
+              grid: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid')
+              },
+              title: {
+                display: true,
+                text: 'Year'
+              }
+            },
             y: {
-              beginAtZero: true,
+              grid: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid')
+              },
+              title: {
+                display: true,
+                text: 'Amount ($)'
+              },
               ticks: {
                 callback: function(value) {
-                  return '$' + value.toLocaleString();
+                  if (value >= 1000000) {
+                    return '$' + (value / 1000000).toFixed(1) + 'M';
+                  } else if (value >= 1000) {
+                    return '$' + (value / 1000).toFixed(0) + 'K';
+                  }
+                  return '$' + value;
                 }
               }
             }
@@ -1330,7 +1298,12 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  return context.dataset.label + ': $' + context.raw.toLocaleString();
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  label += '$' + formatCurrency(context.parsed.y);
+                  return label;
                 }
               }
             }
@@ -1338,60 +1311,108 @@
         }
       });
     }
+    
+    // Update chart colors when theme changes
     function updateChartColors() {
       if (growthChart) {
-        // Create a line gradient for Balance line
-        const balanceLineColor = `hsl(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base))`;
+        const themeColors = getThemeColors();
         
-        // Create distinct shades for the chart elements
-        const contributionsColor = `hsl(var(--theme-hue), calc(var(--theme-saturation) * 0.7), calc(var(--theme-lightness-base) * 1.1))`;
-        const interestColor = `hsl(var(--theme-hue), calc(var(--theme-saturation) * 1.2), calc(var(--theme-lightness-base) * 0.8))`;
+        growthChart.data.datasets[0].borderColor = themeColors.primary;
+        growthChart.data.datasets[0].backgroundColor = themeColors.primary;
         
-        // Update Balance line (dataset 0)
-        growthChart.data.datasets[0].backgroundColor = `hsla(var(--theme-hue), var(--theme-saturation), var(--theme-lightness-base), 0)`;
-        growthChart.data.datasets[0].borderColor = balanceLineColor;
-        growthChart.data.datasets[0].pointBackgroundColor = balanceLineColor;
-        growthChart.data.datasets[0].pointBorderColor = balanceLineColor;
-        growthChart.data.datasets[0].pointHoverBackgroundColor = balanceLineColor;
+        growthChart.data.datasets[1].borderColor = themeColors.secondary;
+        growthChart.data.datasets[1].backgroundColor = themeColors.secondary;
         
-        // Update Contributions bars (dataset 1)
-        growthChart.data.datasets[1].backgroundColor = `hsla(var(--theme-hue), calc(var(--theme-saturation) * 0.7), calc(var(--theme-lightness-base) * 1.1), 0.7)`;
-        growthChart.data.datasets[1].borderColor = contributionsColor;
+        growthChart.options.scales.x.grid.color = themeColors.grid;
+        growthChart.options.scales.y.grid.color = themeColors.grid;
         
-        // Update Interest bars (dataset 2)
-        growthChart.data.datasets[2].backgroundColor = `hsla(var(--theme-hue), calc(var(--theme-saturation) * 1.2), calc(var(--theme-lightness-base) * 0.8), 0.7)`;
-        growthChart.data.datasets[2].borderColor = interestColor;
-        
-        // Apply changes
         growthChart.update();
       }
     }
-    // Listen for input changes
-    const interestInputs = document.querySelectorAll('#interest-form input');
-    interestInputs.forEach(input => {
-      input.addEventListener('input', calculateInterest);
-    });
-    // Chat with Tom
-    let apiKey = '';
     
-    document.getElementById('submit-api-key').addEventListener('click', () => {
-      const keyInput = document.getElementById('api-key-input');
-      apiKey = keyInput.value.trim();
+    // Get theme colors from CSS variables
+    function getThemeColors() {
+      // Get the current theme values from computed styles
+      const primary = getComputedStyle(document.querySelector('.chart-principal')).backgroundColor;
+      const secondary = getComputedStyle(document.querySelector('.chart-interest')).backgroundColor;
+      const grid = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
       
-      if (apiKey) {
-        document.getElementById('api-key-setup').style.display = 'none';
-        document.getElementById('chat-interface').style.display = 'block';
-      } else {
-        alert('Please enter a valid API key');
-      }
-    });
+      return {
+        primary: primary,
+        secondary: secondary,
+        grid: grid,
+      };
+    }
     
-    document.getElementById('skip-api-key').addEventListener('click', () => {
+    // Calculate compound interest
+    function calculateInterest() {
+      // Get input values
+      const initialBalance = parseFloat(document.getElementById('initial-balance').value) || 0;
+      const weeklyContribution = parseFloat(document.getElementById('weekly-contribution').value) || 0;
+      const annualInterestRate = parseFloat(document.getElementById('annual-interest-rate').value) || 0;
+      const investmentPeriod = parseInt(document.getElementById('investment-period').value) || 0;
+      
+      // Convert to proper units
+      const weeklyInterestRate = (annualInterestRate / 100) / 52;
+      const totalWeeks = investmentPeriod * 52;
+      
+      // Prepare data for calculations and chart
+      const yearlyLabels = [];
+      const yearlyPrincipal = [];
+      const yearlyInterest = [];
+      
+      let currentBalance = initialBalance;
+      let totalContributions = initialBalance;
+      let yearlyCounter = 0;
+      
+      // Initialize with starting values
+      yearlyLabels.push(0);
+      yearlyPrincipal.push(initialBalance);
+      yearlyInterest.push(0);
+      
+      // Calculate growth for each week
+      for (let week = 1; week <= totalWeeks; week++) {
+        // Add weekly contribution
+        currentBalance += weeklyContribution;
+        totalContributions += weeklyContribution;
+        
+        // Add interest for the week
+        const interest = currentBalance * weeklyInterestRate;
+        currentBalance += interest;
+        
+        // Store data at yearly intervals
+        if (week % 52 === 0) {
+          yearlyCounter++;
+          yearlyLabels.push(yearlyCounter);
+          yearlyPrincipal.push(totalContributions);
+          yearlyInterest.push(currentBalance - totalContributions);
+        }
+      }
+      
+      // Update results display
+      document.getElementById('final-balance').textContent = '$' + formatCurrency(currentBalance);
+      document.getElementById('total-contributions').textContent = '$' + formatCurrency(totalContributions);
+      document.getElementById('total-interest').textContent = '$' + formatCurrency(currentBalance - totalContributions);
+      
+      const interestPercent = ((currentBalance - totalContributions) / currentBalance * 100).toFixed(1);
+      document.getElementById('interest-percent').textContent = interestPercent + '%';
+      
+      // Update chart with new data
+      if (!growthChart) {
+        initChart();
+      }
+      
+      growthChart.data.labels = yearlyLabels;
+      growthChart.data.datasets[0].data = yearlyPrincipal;
+      growthChart.data.datasets[1].data = yearlyInterest;
+      growthChart.update();
+    }
+    
+    // ChatGPT is now integrated with the server-side OpenAI API
+    document.getElementById('submit-api-key').addEventListener('click', () => {
       document.getElementById('api-key-setup').style.display = 'none';
       document.getElementById('chat-interface').style.display = 'block';
-      
-      // Add a message about missing API key
-      addBotMessage("I notice you haven't provided an API key. While I can still chat with you, my responses will be limited. To get the full AI experience, please provide your OpenAI API key.");
+      addBotMessage("I'm Tom, your AI financial assistant powered by OpenAI. Ask me any questions about saving, investing, budgeting, or debt management!");
     });
     
     function addUserMessage(message) {
@@ -1430,50 +1451,46 @@
     }
     
     async function sendMessageToTom(message) {
-      if (!apiKey) {
-        // Simple canned responses for demo without API key
-        const responses = [
-          "I'd love to help with that, but I need an API key to access my full capabilities. You can set it up anytime by refreshing and entering your OpenAI API key.",
-          "That's an interesting financial question. To give you detailed advice, I'll need access to my AI features through an OpenAI API key.",
-          "To properly analyze your financial situation, I need my full capabilities. Please consider setting up your API key.",
-          "I'm designed to provide personalized financial advice, but I can only do that with my AI features enabled through an API key.",
-          "I understand you're looking for financial guidance. For the best experience, please set up your API key so I can give you tailored advice."
-        ];
-        
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        
-        // Simulate typing delay
-        addTypingIndicator();
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        removeTypingIndicator();
-        addBotMessage(randomResponse);
-        return;
-      }
-      
       try {
+        // Add typing indicator
         addTypingIndicator();
-        // This would normally be a fetch to your backend API
-        // For this standalone version, we'll simulate a response delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Simulated response - in a real app, this would come from the OpenAI API
-        let response = "I'm Tom, your financial assistant. I would normally connect to OpenAI's API to provide personalized financial advice. In this standalone demo, I'm providing a simulated response.";
+        // Make API request to our backend which handles the OpenAI integration
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: message }),
+        });
         
-        if (message.toLowerCase().includes("invest")) {
-          response = "Investment is a great way to grow your wealth. I recommend starting with a diverse portfolio that includes a mix of stocks, bonds, and possibly real estate or index funds. The right mix depends on your age, risk tolerance, and financial goals.";
-        } else if (message.toLowerCase().includes("save")) {
-          response = "Saving is the foundation of financial security. Try to save at least 20% of your income, with three to six months of expenses in an emergency fund. After that, consider tax-advantaged retirement accounts like 401(k)s or IRAs.";
-        } else if (message.toLowerCase().includes("debt")) {
-          response = "When tackling debt, focus first on high-interest debt like credit cards. Consider the snowball method (paying smallest debts first) or the avalanche method (highest interest first). Remember, not all debt is bad - mortgage debt, for example, can be a tool for building wealth.";
-        } else if (message.toLowerCase().includes("budget")) {
-          response = "A good budget follows the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings and debt repayment. Track your spending for a month to see where your money goes, then make adjustments to align with your financial goals.";
+        // Handle non-successful responses
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Chat API error:", errorData);
+          removeTypingIndicator();
+          
+          // Check if it's a rate limit error and show a specific message
+          if (response.status === 429) {
+            addBotMessage("I'm receiving too many messages right now. Please wait a moment before sending another question.");
+          } else if (errorData.message && errorData.message.includes("quota")) {
+            addBotMessage("I apologize, but my AI service is currently at capacity. I'll be fully operational again soon. In the meantime, you can explore other financial tools in this suite.");
+          } else {
+            addBotMessage("I'm sorry, I encountered an error processing your request. Please try again in a moment.");
+          }
+          return;
         }
         
+        // Parse JSON response
+        const data = await response.json();
+        
+        // Remove typing indicator and display the AI response
         removeTypingIndicator();
-        addBotMessage(response);
+        addBotMessage(data.response);
       } catch (error) {
+        console.error("Chat error:", error);
         removeTypingIndicator();
-        addBotMessage("I'm sorry, I encountered an error. Please check your API key or try again later.");
+        addBotMessage("I'm sorry, I encountered an error connecting to our financial AI service. Please try again later.");
       }
     }
     
@@ -1502,6 +1519,7 @@
         e.preventDefault();
       }
     });
+    
     // Goal Recommendations
     document.getElementById('generate-recommendations').addEventListener('click', () => {
       const monthlyIncome = parseFloat(document.getElementById('monthly-income').value) || 0;
@@ -1522,13 +1540,54 @@
       if (monthlyIncome < 3000) incomeCategory = "low";
       if (monthlyIncome > 7000) incomeCategory = "high";
       
+      // Calculate financial health score (0-100)
+      let savingsRateScore = Math.min(100, savingsRate * 4); // 25% savings rate = 100 points
+      let debtRatioScore = debtToIncomeRatio <= 10 ? 100 : Math.max(0, 100 - ((debtToIncomeRatio - 10) * 3)); // 10% or less = 100 points, 43% or more = 0 points
+      let emergencyFundScore = Math.min(100, emergencyFundMonths * 16.67); // 6 months = 100 points
+      
+      // Overall score is weighted average
+      let financialHealthScore = Math.round(
+        (savingsRateScore * 0.35) + // 35% weight to savings rate
+        (debtRatioScore * 0.35) + // 35% weight to debt-to-income ratio
+        (emergencyFundScore * 0.3) // 30% weight to emergency fund
+      );
+      
+      // Determine color and label based on score
+      let scoreColor = "";
+      let scoreLabel = "";
+      
+      if (financialHealthScore >= 80) {
+        scoreColor = "var(--progress-excellent)"; // Green
+        scoreLabel = "Excellent";
+      } else if (financialHealthScore >= 65) {
+        scoreColor = "var(--progress-good)"; // Light green
+        scoreLabel = "Good";
+      } else if (financialHealthScore >= 50) {
+        scoreColor = "var(--progress-okay)"; // Yellow
+        scoreLabel = "Okay";
+      } else if (financialHealthScore >= 35) {
+        scoreColor = "var(--progress-poor)"; // Orange
+        scoreLabel = "Fair";
+      } else {
+        scoreColor = "var(--progress-bad)"; // Red
+        scoreLabel = "Needs Attention";
+      }
+      
       // Generate recommendations
       let recommendations = `<div class="results-card p-4 rounded-lg mb-4">
-        <h4 class="font-semibold mb-2 results-heading">Your Financial Overview</h4>
-        <ul class="space-y-1">
-          <li><strong class="value-highlight">Savings Rate:</strong> ${savingsRate.toFixed(1)}%</li>
-          <li><strong class="value-highlight">Debt-to-Income Ratio:</strong> ${debtToIncomeRatio.toFixed(1)}%</li>
-          <li><strong class="value-highlight">Emergency Fund:</strong> ${emergencyFundMonths.toFixed(1)} months</li>
+        <h4 class="font-semibold mb-2 results-heading">Your Financial Health Score</h4>
+        <div class="mb-4">
+          <div class="flex justify-between mb-1">
+            <span class="font-medium">${financialHealthScore}/100 - ${scoreLabel}</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+            <div class="h-4 rounded-full" style="width: ${financialHealthScore}%; background-color: ${scoreColor};"></div>
+          </div>
+        </div>
+        <ul class="space-y-1 mt-4">
+          <li><strong class="value-highlight">Savings Rate:</strong> ${savingsRate.toFixed(1)}% <span class="text-sm">(${Math.round(savingsRateScore)}/100)</span></li>
+          <li><strong class="value-highlight">Debt-to-Income Ratio:</strong> ${debtToIncomeRatio.toFixed(1)}% <span class="text-sm">(${Math.round(debtRatioScore)}/100)</span></li>
+          <li><strong class="value-highlight">Emergency Fund:</strong> ${emergencyFundMonths.toFixed(1)} months <span class="text-sm">(${Math.round(emergencyFundScore)}/100)</span></li>
         </ul>
       </div>`;
       
@@ -1593,6 +1652,7 @@
       // Update the recommendations container
       document.getElementById('recommendations-content').innerHTML = recommendations;
     });
+    
     // Initialize the app
     initTheme();
     
